@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b1210">
+    <title>Dublin OS Pure</title>
+    <style>
+        /* =========================================
+           1. DESIGN SYSTEM
+           ========================================= */
+        :root {
+            /* Palette Starbucks Titanium */
+            --color-primary: #00704A;       /* Starbucks Green */
+            --color-primary-dark: #004225;
+            --color-accent: #cba258;        /* Gold Star */
+            
+            --color-bg-deep: #050807;       /* Deepest Green/Black */
+            
+            --color-text-main: #ffffff;
+            --color-text-muted: #849690;
+            
+            --color-danger: #ff453a;
+            --color-success: #32d74b;
+
+            /* Glassmorphism System */
+            --glass-surface: rgba(20, 35, 30, 0.65);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(30px);
+            
+            /* Shadows & Depth */
+            --shadow-card: 0 15px 40px -10px rgba(0,0,0,0.6);
+            --shadow-glow: 0 0 20px rgba(0, 112, 74, 0.25);
+
+            /* Animation Curves */
+            --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        /* =========================================
+           2. GLOBAL RESET
+           ========================================= */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+            background-color: var(--color-bg-deep);
+            color: var(--color-text-main);
+            height: 100vh; height: 100dvh;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            user-select: none; -webkit-user-select: none;
+        }
+
+        /* =========================================
+           3. AMBIENT BACKGROUND SYSTEM
+           ========================================= */
+        .ambient-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(circle at 50% 10%, #1e3932, #050807 80%);
+            overflow: hidden;
+        }
+        .ambient-orb {
+            position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.35;
+            animation: orbFloat 20s infinite ease-in-out alternate;
+        }
+        .orb-primary { width: 400px; height: 400px; background: var(--color-primary); top: -100px; left: -50px; animation-duration: 25s; }
+        .orb-accent { width: 300px; height: 300px; background: var(--color-accent); bottom: -50px; right: -50px; animation-delay: -5s; opacity: 0.15; }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-30px, 40px) scale(0.9); }
+        }
+
+        /* =========================================
+           4. LAYOUT & SCROLLING
+           ========================================= */
+        .app-layout { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100%; }
+        .scroll-container {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 0 20px 120px 20px;
+            -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
+        }
+        .scroll-container::-webkit-scrollbar { display: none; }
+
+        /* =========================================
+           5. UI COMPONENTS
+           ========================================= */
+        /* Header */
+        .header-section {
+            padding: 60px 24px 20px 24px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            background: linear-gradient(to bottom, rgba(5,8,7,0.95), rgba(5,8,7,0));
+            flex-shrink: 0; z-index: 50;
+        }
+        .header-branding .brand-label { font-size: 11px; font-weight: 800; color: var(--color-accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+        .header-branding .brand-title { font-size: 28px; font-weight: 800; color: var(--color-text-main); letter-spacing: -0.5px; }
+        
+        .star-pill {
+            background: rgba(255,255,255,0.05); border: var(--glass-border);
+            padding: 8px 16px; border-radius: 40px; display: flex; align-items: center; gap: 8px;
+            backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Mission Control Widgets */
+        .widgets-row { display: flex; gap: 12px; margin-bottom: 24px; }
+        .widget {
+            flex: 1; background: var(--glass-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: var(--glass-border); border-radius: 20px; padding: 16px;
+            text-align: center; box-shadow: var(--shadow-card);
+        }
+        .widget-label { font-size: 9px; font-weight: 800; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .widget-val { font-size: 18px; font-weight: 800; color: var(--color-text-main); font-variant-numeric: tabular-nums; }
+        
+        /* Card */
+        .card-glass {
+            background: var(--glass-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: var(--glass-border); border-radius: 28px; padding: 24px; margin-bottom: 24px;
+            position: relative; overflow: hidden; box-shadow: var(--shadow-card);
+            transform: translateZ(0); transition: transform 0.1s;
+        }
+        .card-glass:active { transform: scale(0.99); }
+
+        /* Level Card */
+        .streak-indicator {
+            position: absolute; top: 24px; right: 24px;
+            background: rgba(203, 162, 88, 0.15); border: 1px solid rgba(203, 162, 88, 0.3);
+            color: var(--color-accent); padding: 6px 12px; border-radius: 14px;
+            font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px;
+        }
+        .level-display-large { font-size: 64px; font-weight: 900; line-height: 1; color: var(--color-text-main); margin-top: 10px; text-shadow: 0 0 30px var(--color-primary-glow); }
+        .level-label-sub { font-size: 13px; color: var(--color-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--color-primary); width: 0%; box-shadow: 0 0 15px var(--color-primary); transition: width 0.8s var(--ease-elastic); }
+
+        /* Tasks */
+        .section-separator { font-size: 13px; font-weight: 800; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin: 35px 0 15px 5px; }
+        
+        .task-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); transition: opacity 0.3s;
+        }
+        .task-row:last-child { border-bottom: none; }
+        .task-content { display: flex; align-items: center; gap: 16px; }
+        .task-icon-box {
+            width: 48px; height: 48px; background: rgba(255,255,255,0.05); border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--color-primary);
+        }
+        .task-text h4 { margin: 0; font-size: 15px; font-weight: 600; color: var(--color-text-main); }
+        .task-text p { margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted); }
+        .btn-action {
+            background: transparent; border: 1px solid var(--color-primary); color: var(--color-primary);
+            padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; transition: 0.2s;
+        }
+        .task-row.completed { opacity: 0.4; pointer-events: none; }
+        .task-row.completed .btn-action { background: var(--color-primary); color: #000; border-color: var(--color-primary); }
+
+        /* Grid */
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-tile {
+            background: var(--glass-surface); border: var(--glass-border); border-radius: 24px; padding: 20px;
+            text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.2s; position: relative;
+        }
+        .grid-tile:active { background: rgba(255,255,255,0.1); transform: scale(0.96); }
+        
+        .tile-emoji { font-size: 32px; margin-bottom: 10px; }
+        .tile-title { font-size: 13px; font-weight: 700; color: var(--color-text-main); }
+        .tile-cost { font-size: 11px; color: var(--color-accent); font-weight: 700; margin-top: 6px; }
+
+        /* Wallet */
+        .wallet-card-container {
+            background: linear-gradient(135deg, #09100d, #1e3932);
+            border: 1px solid rgba(255,255,255,0.1); min-height: 220px;
+            display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;
+        }
+        .wallet-card-container::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%);
+            animation: rotateHolo 15s infinite linear; pointer-events: none;
+        }
+        @keyframes rotateHolo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .wallet-balance { font-size: 48px; font-weight: 800; color: #fff; text-shadow: 0 4px 20px rgba(0,0,0,0.5); z-index: 2; }
+
+        /* Dock */
+        .dock-wrapper {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(11, 18, 16, 0.9); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.15); padding: 12px 30px; border-radius: 40px;
+            display: flex; gap: 40px; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1000;
+        }
+        .dock-item { font-size: 28px; color: var(--color-text-muted); transition: all 0.3s var(--ease-elastic); position: relative; display: flex; flex-direction: column; align-items: center; }
+        .dock-item.active { color: var(--color-primary); transform: translateY(-8px) scale(1.1); text-shadow: 0 0 20px var(--color-primary); }
+        .dock-dot { width: 4px; height: 4px; background: var(--color-primary); border-radius: 50%; position: absolute; bottom: -10px; opacity: 0; transition: 0.3s; }
+        .dock-item.active .dock-dot { opacity: 1; bottom: -6px; }
+
+        /* Utils */
+        .view-layer { display: none; animation: fadeIn 0.4s ease; }
+        .view-layer.active { display: block; }
+        @keyframes fadeIn { from{opacity:0; transform:scale(0.98);} to{opacity:1; transform:scale(1);} }
+
+        #notification-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: var(--color-primary); color: white; padding: 12px 24px; border-radius: 40px;
+            font-weight: 700; font-size: 13px; z-index: 2000; box-shadow: 0 0 30px rgba(0, 112, 74, 0.4);
+            display: flex; gap: 10px; align-items: center; transition: 0.4s var(--ease-elastic);
+        }
+        #notification-toast.visible { transform: translateX(-50%) translateY(0); }
+
+        .particle-fx {
+            position: absolute; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; z-index: 9999; animation: explodeFx 0.8s forwards ease-out;
+        }
+        @keyframes explodeFx { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--vec-x), var(--vec-y)) scale(0); opacity: 0; } }
+
+        .inventory-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-layer">
+        <div class="ambient-orb orb-primary"></div>
+        <div class="ambient-orb orb-accent"></div>
+    </div>
+
+    <div class="app-layout">
+        
+        <header class="header-section">
+            <div class="header-branding">
+                <div class="brand-label">DUBLIN OS DIRECTOR</div>
+                <div class="brand-title">Mission Control</div>
+            </div>
+            <div class="star-pill">
+                <span style="color:var(--color-accent); font-size: 18px;">★</span>
+                <span style="font-weight:800; font-size: 16px;" id="display-stars">0</span>
+            </div>
+        </header>
+
+        <div class="scroll-container">
+
+            <div id="view-home" class="view-layer active">
+                
+                <div class="widgets-row">
+                    <div class="widget">
+                        <div class="widget-label">COUNTDOWN (NOV '26)</div>
+                        <div class="widget-val" style="color:var(--color-accent);" id="widget-countdown">Loading...</div>
+                    </div>
+                    <div class="widget">
+                        <div class="widget-label">DUBLIN LIVE TIME</div>
+                        <div class="widget-val" style="color:var(--color-primary);" id="widget-time">00:00</div>
+                    </div>
+                </div>
+
+                <div class="card-glass">
+                    <div class="streak-indicator">
+                        <span>🔥</span>
+                        <span id="display-streak">0</span>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <div class="level-display-large" id="display-level">1</div>
+                        <div class="level-label-sub" id="display-rank">GREEN MEMBER</div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--color-text-muted); margin-bottom:10px; font-weight:600;">
+                        <span>XP Progress</span>
+                        <span><span id="display-xp">0</span> / 100</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-fill" id="bar-xp"></div>
+                    </div>
+                </div>
+
+                <div class="section-separator">Daily Grind</div>
+                <div class="card-glass" style="padding: 10px 24px;">
+                    
+                    <div class="task-row" id="task-ai" onclick="engine.handleAction('task-ai', 25, 10)">
+                        <div class="task-content">
+                            <div class="task-icon-box">🤖</div>
+                            <div class="task-text">
+                                <h4>AI Content Gen</h4>
+                                <p>Create & Publish Post</p>
+                            </div>
+                        </div>
+                        <button class="btn-action">+10★</button>
+                    </div>
+
+                    <div class="task-row" id="task-vlog" onclick="engine.handleAction('task-vlog', 30, 15)">
+                        <div class="task-content">
+                            <div class="task-icon-box">📹</div>
+                            <div class="task-text">
+                                <h4>Vlog Sequence</h4>
+                                <p>Record Daily Clip</p>
+                            </div>
+                        </div>
+                        <button class="btn-action">+15★</button>
+                    </div>
+
+                    <div class="task-row" id="task-eng" onclick="engine.handleAction('task-eng', 15, 5)">
+                        <div class="task-content">
+                            <div class="task-icon-box">🇬🇧</div>
+                            <div class="task-text">
+                                <h4>English Drill</h4>
+                                <p>10 Min Practice</p>
+                            </div>
+                        </div>
+                        <button class="btn-action">+5★</button>
+                    </div>
+                </div>
+
+                <div class="section-separator">Extra Shots</div>
+                <div class="grid-layout">
+                    <div class="grid-tile" id="side-gym" onclick="engine.handleAction('side-gym', 10, 2)">
+                        <div class="tile-emoji">🏋️</div>
+                        <div class="tile-title">Gym</div>
+                        <div class="tile-cost">+2★</div>
+                    </div>
+                    <div class="grid-tile" id="side-read" onclick="engine.handleAction('side-read', 5, 2)">
+                        <div class="tile-emoji">📚</div>
+                        <div class="tile-title">Read</div>
+                        <div class="tile-cost">+2★</div>
+                    </div>
+                    <div class="grid-tile" id="side-save" onclick="engine.handleAction('side-save', 10, 5)">
+                        <div class="tile-emoji">💰</div>
+                        <div class="tile-title">Save</div>
+                        <div class="tile-cost">+5★</div>
+                    </div>
+                    <div class="grid-tile" id="side-clean" onclick="engine.handleAction('side-clean', 5, 2)">
+                        <div class="tile-emoji">🧹</div>
+                        <div class="tile-title">Clean</div>
+                        <div class="tile-cost">+2★</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; padding: 40px 0; opacity: 0.5;">
+                    <button onclick="engine.resetDay()" style="background:none; border:none; color:white; font-size:10px; font-weight:700; letter-spacing:1px; cursor:pointer;">TAP TO RESET DAY</button>
+                </div>
+
+            </div>
+
+            <div id="view-wallet" class="view-layer">
+                
+                <div class="card-glass wallet-card-container">
+                    <div style="display:flex; justify-content:space-between; z-index:2; align-items:center;">
+                        <span style="font-size:12px; font-weight:800; color:var(--color-accent); letter-spacing:1px;">DUBLIN FREEDOM CARD</span>
+                        <span style="font-size:24px;">🇮🇪</span>
+                    </div>
+                    <div style="z-index:2;">
+                        <div style="font-size:11px; opacity:0.6; font-weight:700; margin-bottom:5px;">TOTAL SAVINGS</div>
+                        <div class="wallet-balance">€<span id="display-money">0.00</span></div>
+                    </div>
+                </div>
+
+                <div class="grid-layout" style="margin-bottom: 30px;">
+                    <div class="grid-tile" onclick="engine.manageMoney(1)" style="border-color:var(--color-success);">
+                        <div style="font-size:24px; color:var(--color-success); margin-bottom:5px;">+</div>
+                        <div class="tile-title" style="color:var(--color-success);">DEPOSIT</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.manageMoney(-1)" style="border-color:var(--color-danger);">
+                        <div style="font-size:24px; color:var(--color-danger); margin-bottom:5px;">-</div>
+                        <div class="tile-title" style="color:var(--color-danger);">PAYMENT</div>
+                    </div>
+                </div>
+
+                <div class="section-separator">Transaction History</div>
+                <div id="list-transactions" style="display:flex; flex-direction:column; gap:10px;">
+                    </div>
+            </div>
+
+            <div id="view-shop" class="view-layer">
+                
+                <div class="card-glass" style="background: rgba(0, 112, 74, 0.15); border-color: var(--color-primary);">
+                    <div style="font-size:12px; color:var(--color-primary); font-weight:800; margin-bottom:15px; text-transform:uppercase;">Inventory Tray</div>
+                    <div id="list-inventory" style="text-align:center; font-size:13px; opacity:0.7;">Tray is empty.</div>
+                </div>
+
+                <div class="section-separator">Rewards Menu</div>
+                <div class="grid-layout">
+                    <div class="grid-tile" onclick="engine.buyItem(10, 'Espresso Shot')">
+                        <div class="tile-emoji">☕️</div>
+                        <div class="tile-title">Espresso</div>
+                        <div class="tile-cost">10 ★</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.buyItem(20, 'Music 1h')">
+                        <div class="tile-emoji">🎵</div>
+                        <div class="tile-title">Music 1h</div>
+                        <div class="tile-cost">20 ★</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.buyItem(50, 'Break 15m')">
+                        <div class="tile-emoji">🧘</div>
+                        <div class="tile-title">Break 15m</div>
+                        <div class="tile-cost">50 ★</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.buyItem(80, 'Netflix Ep')">
+                        <div class="tile-emoji">🎬</div>
+                        <div class="tile-title">Netflix Ep</div>
+                        <div class="tile-cost">80 ★</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.buyItem(100, 'Dark Mode')">
+                        <div class="tile-emoji">🌑</div>
+                        <div class="tile-title">Dark Mode</div>
+                        <div class="tile-cost">100 ★</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.buyItem(150, 'Cheat Meal')">
+                        <div class="tile-emoji">🍔</div>
+                        <div class="tile-title">Cheat Meal</div>
+                        <div class="tile-cost">150 ★</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.buyItem(200, 'Cinema')">
+                        <div class="tile-emoji">🍿</div>
+                        <div class="tile-title">Cinema</div>
+                        <div class="tile-cost">200 ★</div>
+                    </div>
+                    <div class="grid-tile" onclick="engine.buyItem(300, 'Gold Status')">
+                        <div class="tile-emoji">⭐️</div>
+                        <div class="tile-title">Gold Status</div>
+                        <div class="tile-cost">300 ★</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="dock-wrapper">
+        <div class="dock-item active" id="nav-home" onclick="engine.switchTab('home')">
+            <span>🏠</span>
+            <div class="dock-dot"></div>
+        </div>
+        <div class="dock-item" id="nav-wallet" onclick="engine.switchTab('wallet')">
+            <span>💳</span>
+            <div class="dock-dot"></div>
+        </div>
+        <div class="dock-item" id="nav-shop" onclick="engine.switchTab('shop')">
+            <span>🛍️</span>
+            <div class="dock-dot"></div>
+        </div>
+    </nav>
+
+    <div id="notification-toast">
+        <span style="font-size: 16px;">✅</span>
+        <span id="toast-message">Action Completed</span>
+    </div>
+
+    <script>
+        /**
+         * DUBLIN OS TITANIUM ENGINE
+         * Version: 8.0 Reality Check
+         */
+        
+        // --- CONFIGURATION ---
+        const APP_CONFIG = {
+            storageKey: 'dublin_os_reality_v1',
+            targetDate: "2026-11-01T00:00:00",
+            levels: ["Green Member", "Gold Member", "Platinum", "Diamond Elite", "Dubliner"],
+            xpPerLevel: 100,
+            colors: {
+                primary: '#00704A',
+                accent: '#cba258',
+                white: '#ffffff'
+            }
+        };
+
+        // --- REACTIVE STORE ---
+        let store = {
+            xp: 0,
+            stars: 0,
+            money: 0,
+            streak: 0,
+            lastLoginDate: '',
+            completedTasks: [],
+            inventory: [],
+            transactions: []
+        };
+
+        const engine = {
+            
+            // --- INITIALIZATION ---
+            init: () => {
+                const savedData = localStorage.getItem(APP_CONFIG.storageKey);
+                if (savedData) {
+                    store = JSON.parse(savedData);
+                } else {
+                    store.lastLoginDate = new Date().toDateString();
+                }
+                
+                engine.checkStreak();
+                
+                // Start Timers
+                setInterval(engine.updateTimers, 1000);
+                engine.updateTimers();
+                
+                engine.render();
+            },
+
+            // --- PERSISTENCE ---
+            save: () => {
+                localStorage.setItem(APP_CONFIG.storageKey, JSON.stringify(store));
+                engine.render();
+            },
+
+            // --- LOGIC: STREAK & TIME ---
+            checkStreak: () => {
+                const today = new Date().toDateString();
+                if (store.lastLoginDate !== today) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    
+                    if (store.lastLoginDate === yesterday.toDateString()) {
+                        store.streak++;
+                    } else {
+                        store.streak = 1;
+                    }
+                    store.lastLoginDate = today;
+                    engine.save();
+                }
+            },
+
+            updateTimers: () => {
+                // 1. Countdown Logic
+                const target = new Date(APP_CONFIG.targetDate).getTime();
+                const now = new Date().getTime();
+                const diff = target - now;
+                
+                if (diff > 0) {
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    document.getElementById('widget-countdown').innerText = `${days}d ${hours}h`;
+                } else {
+                    document.getElementById('widget-countdown').innerText = "ARRIVED";
+                }
+
+                // 2. Dublin Clock
+                const dublin = new Date().toLocaleTimeString("en-IE", {
+                    timeZone: "Europe/Dublin",
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                document.getElementById('widget-time').innerText = dublin;
+            },
+
+            // --- LOGIC: ACTIONS ---
+            handleAction: (taskId, xpReward, starReward) => {
+                if (store.completedTasks.includes(taskId)) return;
+
+                // Visual Feedback
+                engine.triggerParticles(event.clientX, event.clientY);
+                engine.triggerHaptic();
+                engine.showToast(`+${starReward} Stars | +${xpReward} XP`);
+
+                // Update Data
+                store.xp += xpReward;
+                store.stars += starReward;
+                store.completedTasks.push(taskId);
+
+                engine.save();
+            },
+
+            buyItem: (cost, itemName) => {
+                if (store.stars >= cost) {
+                    store.stars -= cost;
+                    store.inventory.push(itemName);
+                    
+                    engine.triggerParticles(event.clientX, event.clientY);
+                    engine.triggerHaptic();
+                    engine.showToast(`Purchased: ${itemName}`);
+                    
+                    engine.save();
+                } else {
+                    engine.showToast(`❌ Need ${cost} Stars`);
+                    engine.triggerHaptic();
+                }
+            },
+
+            useItem: (index) => {
+                const item = store.inventory[index];
+                store.inventory.splice(index, 1);
+                
+                if(item === 'Dark Mode') engine.toggleTheme();
+
+                engine.showToast(`Redeemed: ${item}`);
+                engine.triggerHaptic();
+                
+                engine.save();
+            },
+
+            manageMoney: (multiplier) => {
+                // Instant Prompt for Speed
+                const input = prompt(multiplier > 0 ? "Deposit Amount (€):" : "Payment Amount (€):");
+                const value = parseFloat(input);
+
+                if (value && value > 0) {
+                    store.money += (value * multiplier);
+                    
+                    const txType = multiplier > 0 ? "Deposit" : "Payment";
+                    store.transactions.unshift({
+                        type: txType,
+                        value: value,
+                        date: new Date().toLocaleDateString()
+                    });
+
+                    if (store.transactions.length > 20) store.transactions.pop();
+
+                    engine.save();
+                }
+            },
+
+            resetDay: () => {
+                // Instant Reset Logic
+                store.completedTasks = [];
+                engine.showToast("New Day Started");
+                engine.save();
+                
+                // Simulated Reload Visual
+                document.body.style.opacity = '0';
+                document.body.style.transition = 'opacity 0.5s';
+                setTimeout(() => window.location.reload(), 400);
+            },
+
+            // --- NAVIGATION ---
+            switchTab: (tabName) => {
+                document.querySelectorAll('.view-layer').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.dock-item').forEach(el => el.classList.remove('active'));
+
+                document.getElementById(`view-${tabName}`).classList.add('active');
+                document.getElementById(`nav-${tabName}`).classList.add('active');
+            },
+
+            // --- VISUAL FX ---
+            showToast: (message) => {
+                const toast = document.getElementById('notification-toast');
+                document.getElementById('toast-message').innerText = message;
+                
+                toast.classList.add('visible');
+                setTimeout(() => {
+                    toast.classList.remove('visible');
+                }, 2500);
+            },
+
+            triggerParticles: (x, y) => {
+                for (let i = 0; i < 20; i++) {
+                    const p = document.createElement('div');
+                    p.classList.add('particle-fx');
+                    document.body.appendChild(p);
+
+                    // Physics Math
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = Math.random() * 150 + 50;
+                    const dx = Math.cos(angle) * velocity;
+                    const dy = Math.sin(angle) * velocity;
+                    
+                    // Colors
+                    const color = Math.random() > 0.5 ? APP_CONFIG.colors.primary : APP_CONFIG.colors.accent;
+
+                    p.style.left = x + 'px';
+                    p.style.top = y + 'px';
+                    p.style.background = color;
+                    p.style.setProperty('--vec-x', dx + 'px');
+                    p.style.setProperty('--vec-y', dy + 'px');
+
+                    setTimeout(() => p.remove(), 800);
+                }
+            },
+
+            triggerHaptic: () => {
+                if (navigator.vibrate) navigator.vibrate(15);
+            },
+
+            toggleTheme: () => {
+                document.body.style.background = "#000000";
+                // Just a placeholder visual effect for "Dark Mode" item
+            },
+
+            // --- CORE RENDERER ---
+            render: () => {
+                // 1. Header Stats
+                document.getElementById('display-stars').innerText = store.stars;
+
+                // 2. Level System
+                const currentLevel = Math.floor(store.xp / APP_CONFIG.xpPerLevel) + 1;
+                const currentProgress = store.xp % APP_CONFIG.xpPerLevel;
+                const rankIndex = Math.min(currentLevel - 1, APP_CONFIG.levels.length - 1);
+                
+                document.getElementById('display-level').innerText = currentLevel;
+                document.getElementById('display-rank').innerText = APP_CONFIG.levels[rankIndex];
+                document.getElementById('display-xp').innerText = currentProgress;
+                document.getElementById('bar-xp').style.width = `${currentProgress}%`;
+                document.getElementById('display-streak').innerText = store.streak;
+
+                // 3. Money
+                document.getElementById('display-money').innerText = store.money.toLocaleString('en-IE', {minimumFractionDigits: 2});
+
+                // 4. Task States
+                store.completedTasks.forEach(taskId => {
+                    const el = document.getElementById(taskId);
+                    if (el) {
+                        el.classList.add('completed');
+                        const btn = el.querySelector('button');
+                        if (btn) btn.innerText = "DONE";
+                    }
+                });
+
+                // 5. Inventory
+                const invList = document.getElementById('list-inventory');
+                if (store.inventory.length === 0) {
+                    invList.innerHTML = 'Tray is empty.';
+                } else {
+                    invList.innerHTML = store.inventory.map((item, index) => `
+                        <div class="inventory-item">
+                            <span style="font-weight:700;">${item}</span>
+                            <span onclick="engine.useItem(${index})" style="color:var(--color-primary); font-weight:800; cursor:pointer; font-size:11px;">REDEEM</span>
+                        </div>
+                    `).join('');
+                }
+
+                // 6. Transactions
+                const txList = document.getElementById('list-transactions');
+                txList.innerHTML = store.transactions.map(tx => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; font-size:13px; margin-bottom:5px;">
+                        <div>
+                            <div style="font-weight:700; margin-bottom:2px;">${tx.type}</div>
+                            <div style="font-size:10px; opacity:0.6;">${tx.date}</div>
+                        </div>
+                        <div style="font-weight:700; color:${tx.type === 'Deposit' ? 'var(--color-success)' : 'var(--color-danger)'};">
+                            ${tx.type === 'Deposit' ? '+' : ''}€${tx.value.toFixed(2)}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        // BOOT THE SYSTEM
+        engine.init();
+
+    </script>
+</body>
+</html>
